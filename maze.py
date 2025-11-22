@@ -324,9 +324,9 @@ if __name__ == "__main__":
     MAZE_W = 31
     MAZE_H = 21
     SEED = 42
-    GENERATIONS = 200
-    POP_SIZE = 300
-    MAX_STEPS = 1000
+    GENERATIONS = 80
+    POP_SIZE = 120
+    MAX_STEPS = 400
 
     maze = generate_maze(MAZE_W, MAZE_H, seed=SEED)
     env = MazeEnv(maze, tile_size=16, render=False, max_steps=MAX_STEPS)

@@ -17,10 +17,10 @@ AGENT_COLOR = (0, 0, 255)
 FPS = 10                # velocidad del movimiento (frames por segundo)
 
 MOVES = {
-    1: (1, 0),   # right
-    2: (0, 1),   # up
-    3: (-1, 0),  # left
-    4: (0, -1)   # down
+    1: (1, 0),   # down
+    2: (0, 1),   # right
+    3: (-1, 0),  # up
+    4: (0, -1)   # left
 }
 
 class GeneticMazeSolver:
@@ -81,7 +81,7 @@ class GeneticMazeSolver:
         if x < 0 or y < 0 or y >= len(self.maze) or x >= len(self.maze[0]):
             return True
         try:
-            return self.maze[y][x] == 1
+            return self.maze[x][y] == 1
         except:
             return True
 

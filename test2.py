@@ -1,6 +1,21 @@
 import random
 import numpy as np
 
+import pygame
+import sys
+import time
+
+# --------------------------------------------
+# CONFIGURACIÓN
+# --------------------------------------------
+
+CELL_SIZE = 20          # tamaño de cada celda en píxeles
+WALL_COLOR = (40, 40, 40)
+FREE_COLOR = (220, 220, 220)
+PATH_COLOR = (255, 0, 0)
+AGENT_COLOR = (0, 0, 255)
+FPS = 10                # velocidad del movimiento (frames por segundo)
+
 MOVES = {
     1: (1, 0),   # right
     2: (0, 1),   # up
@@ -22,7 +37,7 @@ class GeneticMazeSolver:
         # Coeficientes del paper:
         self.k1 = 1.0
         self.k2 = 1.0
-        self.k3 = 40.0
+        self.k3 = 400.0
         self.k4 = 200.0
 
     # =====================
@@ -33,7 +48,7 @@ class GeneticMazeSolver:
         path = [(x, y)]
         crash = 0
         movement_changes = 0
-
+        pen = 0
         for i, g in enumerate(genes):
             dx, dy = MOVES[g]
             nx, ny = x + dx, y + dy
@@ -42,6 +57,7 @@ class GeneticMazeSolver:
             if self.collides(nx, ny):
                 crash += 1
                 movement_changes += 1
+                pen += 1
                 continue  # sigue usando mismo gen
 
             # mover
@@ -56,13 +72,13 @@ class GeneticMazeSolver:
             if (x, y) == self.goal:
                 break
 
-        return path, crash, movement_changes
+        return path, crash, movement_changes, pen
 
     # =====================
     # COLISIÓN CON PARED
     # =====================
     def collides(self, x, y):
-        if x < 0 or y < 0:
+        if x < 0 or y < 0 or y >= len(self.maze) or x >= len(self.maze[0]):
             return True
         try:
             return self.maze[y][x] == 1
@@ -84,13 +100,13 @@ class GeneticMazeSolver:
     # FUNCIÓN FITNESS
     # =====================
     def fitness(self, individual):
-        path, crash, m_changes = self.simulate(individual)
+        path, crash, m_changes, pen = self.simulate(individual)
         last = path[-1]
 
         dist = np.linalg.norm(np.array(last) - np.array(self.goal))
         steps = len(path)
 
-        return dist + self.k1*m_changes + self.k2*steps + self.k3*crash
+        return dist + self.k1*m_changes + self.k2*steps + self.k3*crash + self.k4*pen
 
     # =====================
     # SELECCIÓN
@@ -159,20 +175,7 @@ class GeneticMazeSolver:
     def random_individual(self):
         return [random.randint(1, 4) for _ in range(self.max_len)]
 
-import pygame
-import sys
-import time
 
-# --------------------------------------------
-# CONFIGURACIÓN
-# --------------------------------------------
-
-CELL_SIZE = 20          # tamaño de cada celda en píxeles
-WALL_COLOR = (40, 40, 40)
-FREE_COLOR = (220, 220, 220)
-PATH_COLOR = (255, 0, 0)
-AGENT_COLOR = (0, 0, 255)
-FPS = 10                # velocidad del movimiento (frames por segundo)
 
 # --------------------------------------------
 # FUNCIÓN PRINCIPAL
@@ -258,7 +261,7 @@ if __name__ == "__main__":
 
     solution = solver.solve()
     print("\nSOLUTION:", solution)
-    path,_ ,_= solver.simulate(solution)
+    path,_ ,_, _= solver.simulate(solution)
     print("PATH:", path)
 
 

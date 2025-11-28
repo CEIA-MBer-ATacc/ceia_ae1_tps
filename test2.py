@@ -159,6 +159,74 @@ class GeneticMazeSolver:
     def random_individual(self):
         return [random.randint(1, 4) for _ in range(self.max_len)]
 
+import pygame
+import sys
+import time
+
+# --------------------------------------------
+# CONFIGURACIÓN
+# --------------------------------------------
+
+CELL_SIZE = 20          # tamaño de cada celda en píxeles
+WALL_COLOR = (40, 40, 40)
+FREE_COLOR = (220, 220, 220)
+PATH_COLOR = (255, 0, 0)
+AGENT_COLOR = (0, 0, 255)
+FPS = 10                # velocidad del movimiento (frames por segundo)
+
+# --------------------------------------------
+# FUNCIÓN PRINCIPAL
+# --------------------------------------------
+
+def draw_maze(screen, maze):
+    """Dibuja el laberinto completo"""
+    rows = len(maze)
+    cols = len(maze[0])
+
+    for y in range(rows):
+        for x in range(cols):
+            rect = pygame.Rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+
+            if maze[y][x] == 1:  # pared
+                pygame.draw.rect(screen, WALL_COLOR, rect)
+            else:               # espacio libre
+                pygame.draw.rect(screen, FREE_COLOR, rect)
+
+            # bordes opcionales
+            pygame.draw.rect(screen, (180, 180, 180), rect, 1)
+
+
+def animate_path(screen, maze, path):
+    """Dibuja el camino paso a paso con un agente moviéndose"""
+    draw_maze(screen, maze)
+
+    # Dibuja líneas del camino recorrido
+    for i in range(1, len(path)):
+        x1 = path[i - 1][1] * CELL_SIZE + CELL_SIZE // 2
+        y1 = path[i - 1][0] * CELL_SIZE + CELL_SIZE // 2
+        x2 = path[i][1] * CELL_SIZE + CELL_SIZE // 2
+        y2 = path[i][0] * CELL_SIZE + CELL_SIZE // 2
+
+        pygame.draw.line(screen, PATH_COLOR, (x1, y1), (x2, y2), 3)
+
+        # Dibujar agente
+        ax = path[i][1] * CELL_SIZE + CELL_SIZE // 2
+        ay = path[i][0] * CELL_SIZE + CELL_SIZE // 2
+        pygame.draw.circle(screen, AGENT_COLOR, (ax, ay), CELL_SIZE // 3)
+
+        pygame.display.update()
+        clock.tick(FPS)
+
+    # Dejar el resultado final
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+
+
+
 if __name__ == "__main__":
     maze = [
         [0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
@@ -184,8 +252,8 @@ if __name__ == "__main__":
         start = (0,0),
         goal = (14,14),
         pop_size = 300,
-        max_gen = 100,
-        max_len = 150
+        max_gen = 150,
+        max_len = 180
     )
 
     solution = solver.solve()
@@ -193,3 +261,14 @@ if __name__ == "__main__":
     path,_ ,_= solver.simulate(solution)
     print("PATH:", path)
 
+
+    pygame.init()
+    clock = pygame.time.Clock()
+
+    height = len(maze) * CELL_SIZE
+    width  = len(maze[0]) * CELL_SIZE
+
+    screen = pygame.display.set_mode((width, height))
+    pygame.display.set_caption("Laberinto con recorrido - Pygame")
+
+    animate_path(screen, maze, path)

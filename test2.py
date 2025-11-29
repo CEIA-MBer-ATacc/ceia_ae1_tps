@@ -25,13 +25,14 @@ MOVES = {
 
 class GeneticMazeSolver:
     def __init__(self, maze, start, goal,
-                 pop_size=100, max_gen=20, max_len=20):
+                 pop_size=100, max_gen=20, min_len=5, max_len=20):
         self.maze = maze
         self.start = start
         self.goal = goal
 
         self.pop_size = pop_size
         self.max_gen = max_gen
+        self.min_len = min_len
         self.max_len = max_len
 
         # Coeficientes del paper:
@@ -39,6 +40,7 @@ class GeneticMazeSolver:
         self.k2 = 1.0
         self.k3 = 400.0
         self.k4 = 200.0
+        self.k5 = 10000.0
 
     # =====================
     # DECODIFICACIÓN DEL CROMOSOMA
@@ -46,6 +48,8 @@ class GeneticMazeSolver:
     def simulate(self, genes):
         x, y = self.start
         path = [(x, y)]
+        visited_cells = {(x, y)}
+        revisit_count = 0
         crash = 0
         movement_changes = 0
         pen = 0
@@ -62,6 +66,12 @@ class GeneticMazeSolver:
 
             # mover
             x, y = nx, ny
+            
+            if (x, y) in visited_cells:
+                revisit_count += 1
+            else:
+                visited_cells.add((x, y))
+
             path.append((x, y))
 
             # punto de decisión
@@ -72,7 +82,7 @@ class GeneticMazeSolver:
             if (x, y) == self.goal:
                 break
 
-        return path, crash, movement_changes, pen
+        return path, crash, movement_changes, pen, revisit_count
 
     # =====================
     # COLISIÓN CON PARED
@@ -100,13 +110,13 @@ class GeneticMazeSolver:
     # FUNCIÓN FITNESS
     # =====================
     def fitness(self, individual):
-        path, crash, m_changes, pen = self.simulate(individual)
+        path, crash, m_changes, pen, revisit_count = self.simulate(individual)
         last = path[-1]
 
         dist = np.linalg.norm(np.array(last) - np.array(self.goal))
         steps = len(path)
 
-        return dist + self.k1*m_changes + self.k2*steps + self.k3*crash + self.k4*pen
+        return dist + self.k1*m_changes + self.k2*steps + self.k3*crash + self.k4*pen + self.k5*revisit_count
 
     # =====================
     # SELECCIÓN
@@ -138,9 +148,23 @@ class GeneticMazeSolver:
     # MUTACIÓN
     # =====================
     def mutate(self, individual):
-        if random.random() < 0.8: return individual
-        idx = random.randint(0, len(individual)-1)
-        individual[idx] = random.randint(1, 4)
+        # 80% de probabilidad de que un individuo mute (según el paper)
+        if random.random() < 0.8:
+            mutation_type = random.choices(
+                ["insert", "change"],
+                weights=[0.5, 0.5],
+                k=1
+            )[0]
+            current_length = len(individual)
+
+            if mutation_type == "change":
+                if current_length > 0:
+                    idx = random.randint(0, current_length - 1)
+                    individual[idx] = random.randint(1, 4)
+            elif mutation_type == "insert":
+                if current_length < self.max_len:
+                    idx = random.randint(0, current_length) # Puede insertar al final
+                    individual.insert(idx, random.randint(1, 4))
         return individual
 
     # =====================
@@ -173,7 +197,8 @@ class GeneticMazeSolver:
         return best
 
     def random_individual(self):
-        return [random.randint(1, 4) for _ in range(self.max_len)]
+        length = random.randint(self.min_len, self.max_len)
+        return [random.randint(1, 4) for _ in range(length)]
 
 
 
@@ -254,14 +279,15 @@ if __name__ == "__main__":
         maze,
         start = (0,0),
         goal = (14,14),
-        pop_size = 300,
-        max_gen = 150,
+        pop_size = 500,
+        max_gen = 1000,
+        min_len = 30,
         max_len = 180
     )
 
     solution = solver.solve()
     print("\nSOLUTION:", solution)
-    path,_ ,_, _= solver.simulate(solution)
+    path,_ ,_, _, _= solver.simulate(solution)
     print("PATH:", path)
 
 

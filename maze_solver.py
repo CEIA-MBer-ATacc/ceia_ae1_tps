@@ -172,16 +172,19 @@ class GeneticMazeSolver:
     # =====================
     def solve(self):
         population = [self.random_individual() for _ in range(self.pop_size)]
+        fitness_history = []
 
         for gen in range(self.max_gen):
             scores = [self.fitness(ind) for ind in population]
+            best_score = min(scores)
+            fitness_history.append(best_score)
             best = population[np.argmin(scores)]
-            print(f"Gen {gen} score: {min(scores):.3f} best path len={len(best)}")
+            print(f"Gen {gen} score: {best_score:.3f} best path len={len(best)}")
 
             # Encontró meta
             if self.simulate(best)[0][-1] == self.goal:
                 print("💥 Goal reached!")
-                return best
+                return best, fitness_history
 
             selected = self.select(population, scores)
             children = []
@@ -194,7 +197,7 @@ class GeneticMazeSolver:
 
             population = children[:self.pop_size]
 
-        return best
+        return best, fitness_history
 
     def random_individual(self):
         length = random.randint(self.min_len, self.max_len)
@@ -285,12 +288,15 @@ if __name__ == "__main__":
         max_len = 180
     )
 
-    solution = solver.solve()
+    # Llamada al solver para obtener la solución y el historial de fitness
+    solution, history = solver.solve()
     print("\nSOLUTION:", solution)
-    path,_ ,_, _, _= solver.simulate(solution)
+
+    # Simulación final para obtener el camino
+    path, _, _, _, _ = solver.simulate(solution)
     print("PATH:", path)
 
-
+    # Inicialización de Pygame y animación (comentado para no bloquear)
     pygame.init()
     clock = pygame.time.Clock()
 

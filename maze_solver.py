@@ -40,7 +40,7 @@ class GeneticMazeSolver:
         self.k2 = 1.0
         self.k3 = 400.0
         self.k4 = 200.0
-        self.k5 = 10000.0
+        self.k5 = 1000.0
 
     # =====================
     # DECODIFICACIÓN DEL CROMOSOMA
